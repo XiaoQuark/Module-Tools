@@ -25,7 +25,7 @@ Q6: What is 10001 + 10001?
 Answer: 100010
 
 Q7: What's the largest number you can store with 4 bits, if you want to be able to represent the number 0?
-Answer: 1111
+Answer: 15
 
 Q8: How many bits would you need in order to store the numbers between 0 and 255 inclusive?
 Answer: 8
