@@ -1,6 +1,6 @@
 name: Validate PR Metadata and Check SDC-Tools Tasks
 on:
-  pull_request:
+  pull_request_target:
     types:
       - labeled
       - opened
@@ -24,7 +24,10 @@ jobs:
     if: ${{ github.event.label.name == 'Needs Review' }}
     steps:
       - name: checkout base branch
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
+        with:
+          allow-unsafe-pr-checkout: true
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: Get changed files
         id: changed-files
         uses: tj-actions/changed-files@v47.0.5
