@@ -2,7 +2,7 @@ This is a sample file for experimenting with sed.
 
 It contains many lines, and there are some things you may want to do with each of them.
 
-We'll include some score information:
+We will include some score information:
 37 Alisha
 15 Jacob
 7 Pietro
