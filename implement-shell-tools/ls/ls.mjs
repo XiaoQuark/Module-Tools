@@ -66,6 +66,22 @@ for (const arg of argv) {
 	}
 }
 
+if (options.help) {
+	process.stdout.write("Usage: ls [OPTION]... [FILE]...\n");
+	process.stdout.write(
+		"List information about the FILEs (the current directory by default).\n\n",
+	);
+	process.stdout.write("Options:\n");
+
+	for (const definition of Object.values(validFlags)) {
+		process.stdout.write(
+			`  ${definition.short}, ${definition.long}\t${definition.description}\n`,
+		);
+	}
+
+	process.exit(0);
+}
+
 if (paths.length === 0) {
 	paths.push(".");
 }
