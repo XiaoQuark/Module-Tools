@@ -27,10 +27,43 @@ if (positionals.length === 0) {
 	process.exit(1);
 }
 
-const results = [];
+const fileCounts = [];
 
-// read file and calculate counts
 for (const path of positionals) {
+	fileCounts.push(countFile(path));
+}
+
+const totalCounts = {
+	lineCount: 0,
+	wordCount: 0,
+	byteCount: 0,
+};
+
+for (const file of fileCounts) {
+	totalCounts.lineCount += file.lineCount;
+	totalCounts.wordCount += file.wordCount;
+	totalCounts.byteCount += file.byteCount;
+}
+
+// output formatting
+const largestByteCount =
+	fileCounts.length > 1 ? totalCounts.byteCount : fileCounts[0].byteCount;
+
+const width = String(largestByteCount).length;
+
+for (const file of fileCounts) {
+	const formattedCounts = formatCounts(file, width);
+
+	process.stdout.write(`${formattedCounts} ${file.path}\n`);
+}
+
+if (fileCounts.length > 1) {
+	const formattedTotals = formatCounts(totalCounts, width);
+
+	process.stdout.write(`${formattedTotals} total\n`);
+}
+
+function countFile(path) {
 	const content = fs.readFileSync(path, "utf-8");
 
 	const lineCount = [...content].filter((char) => char === "\n").length;
@@ -42,101 +75,44 @@ for (const path of positionals) {
 
 	const byteCount = Buffer.byteLength(content);
 
-	results.push({
-		path,
+	return {
 		lineCount,
 		wordCount,
 		byteCount,
-	});
+		path,
+	};
 }
 
-let totalLines = 0;
-let totalWords = 0;
-let totalBytes = 0;
-
-// calculate total counts
-for (const result of results) {
-	totalLines += result.lineCount;
-	totalWords += result.wordCount;
-	totalBytes += result.byteCount;
-}
-
-const allCounts = [];
-
-for (const result of results) {
-	const counts = getSelectedCounts(
-		result.lineCount,
-		result.wordCount,
-		result.byteCount,
-	);
-
-	allCounts.push(...counts);
-}
-
-if (results.length > 1) {
-	const totalCounts = getSelectedCounts(totalLines, totalWords, totalBytes);
-
-	allCounts.push(...totalCounts);
-}
-
-// flags handling function
 function getSelectedCounts(lineCount, wordCount, byteCount) {
-	const counts = [];
+	const selectedCounts = [];
 
 	if (values.lines) {
-		counts.push(lineCount);
+		selectedCounts.push(lineCount);
 	}
 
 	if (values.words) {
-		counts.push(wordCount);
+		selectedCounts.push(wordCount);
 	}
 
 	if (values.bytes) {
-		counts.push(byteCount);
+		selectedCounts.push(byteCount);
 	}
 
-	if (counts.length === 0) {
-		counts.push(lineCount, wordCount, byteCount);
+	if (selectedCounts.length === 0) {
+		selectedCounts.push(lineCount, wordCount, byteCount);
 	}
 
-	return counts;
+	return selectedCounts;
 }
 
-// output formatting
-let largestByteCount = 0;
-
-for (const result of results) {
-	if (result.byteCount > largestByteCount) {
-		largestByteCount = result.byteCount;
-	}
-}
-
-if (results.length > 1 && totalBytes > largestByteCount) {
-	largestByteCount = totalBytes;
-}
-
-const width = String(largestByteCount).length;
-
-for (const result of results) {
-	const counts = getSelectedCounts(
-		result.lineCount,
-		result.wordCount,
-		result.byteCount,
+function formatCounts(counts, width) {
+	const selectedCounts = getSelectedCounts(
+		counts.lineCount,
+		counts.wordCount,
+		counts.byteCount,
 	);
 
-	const formattedCounts = counts
+	return selectedCounts
 		.map((count) => String(count).padStart(width))
 		.join(" ");
-
-	process.stdout.write(`${formattedCounts} ${result.path}\n`);
-}
-
-if (results.length > 1) {
-	const totalCounts = getSelectedCounts(totalLines, totalWords, totalBytes);
-
-	const formattedTotals = totalCounts
-		.map((count) => String(count).padStart(width))
-		.join(" ");
-
-	process.stdout.write(`${formattedTotals} total\n`);
 }
