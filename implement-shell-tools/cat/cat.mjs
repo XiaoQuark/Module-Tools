@@ -1,39 +1,53 @@
 import process from "node:process";
 import { promises as fs } from "node:fs";
+import { Command } from "commander";
 
-const optionDefinitions = [
-	{
-		short: "-n",
-		description: "Numbers all output lines",
-	},
-	{
-		short: "-b",
-		description: "Numbers non-blank output lines",
-	},
-];
+const program = new Command();
+program
+	.name("cat")
+	.description("Concatenate files and print them to stdout")
+	.option("-n, --number", "number all output lines")
+	.option("-b, --number-nonblank", "number non-blank lines")
+	.argument("<paths...>", "Paths to process");
 
-const argv = process.argv.slice(2);
-// if (argv.length != 1) {
-// 	console.error(
-// 		`Expected exactly 1 argument (a path) to be passed but got ${argv.length}.`,
-// 	);
-// 	process.exit(1);
-// }
+program.parse();
 
-console.log(argv);
-
-const matchedOptions = optionDefinitions.find((option) => arg === option.short);
-const paths = [];
-for (const arg of argv) {
-	if (arg.match(flagRegex)) {
-		flags.push(arg);
-	} else {
-		paths.push(arg);
-	}
-}
-console.log(flags, paths);
+const options = program.opts();
+const paths = program.args;
+let lineNumber = 1;
 
 for (const path of paths) {
 	const contents = await fs.readFile(path, "utf8");
-	process.stdout.write(contents);
+	const endsWithNewline = contents.endsWith("\n");
+
+	let lines = contents.split("\n");
+
+	if (endsWithNewline) {
+		lines.pop();
+	}
+
+	if (options.numberNonblank) {
+		lines = numberLines(lines, false);
+	} else if (options.number) {
+		lines = numberLines(lines, true);
+	}
+
+	let output = lines.join("\n");
+
+	if (endsWithNewline) {
+		output += "\n";
+	}
+
+	process.stdout.write(output);
+}
+
+function numberLines(lines, includeBlankLines) {
+	for (let i = 0; i < lines.length; i++) {
+		if (includeBlankLines || lines[i].length > 0) {
+			lines[i] = `${String(lineNumber).padStart(6, " ")}\t${lines[i]}`;
+			lineNumber++;
+		}
+	}
+
+	return lines;
 }
